@@ -15,6 +15,8 @@
 BTN_FLAGS   EQU  0x53
 W_TEMP      EQU  0x70   
 STATUS_TEMP EQU  0x71  
+GAME_Tick1ms   EQU  0x54     ; set to 1 every T0IF, cleared by game_fsm each pass
+
 
 TMR_Init
     BANKSEL OPTION_REG
@@ -43,6 +45,7 @@ ISR
     BTFSS   INTCON, T0IF
     GOTO    _ISR_CheckMaster
     CALL    SEG_Refresh
+    BSF     GAME_Tick1ms, 0
     BCF     INTCON, T0IF
 
 _ISR_CheckMaster
