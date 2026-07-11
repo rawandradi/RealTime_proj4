@@ -8,15 +8,9 @@
 ;      buttons) -> raise a RAW edge flag. Partner 2 does NOT
 ;      debounce or decide what a press means - that is Partner
 ;      3's job in buttons.asm, built on top of these flags.
-; Depends on : hardware_pins.inc, driver_macros.inc,
+; Depends on : hardware_pins.inc, driver_macros.inc, ram_map.inc,
 ;              sevenseg_driver.asm (calls SEG_Refresh)
 ;==============================================================
-
-BTN_FLAGS   EQU  0x53
-W_TEMP      EQU  0x70   
-STATUS_TEMP EQU  0x71  
-GAME_Tick1ms   EQU  0x54     ; set to 1 every T0IF, cleared by game_fsm each pass
-
 
 TMR_Init
     BANKSEL OPTION_REG
@@ -29,23 +23,26 @@ TMR_Init
     BCF     INTCON, INTF
     BCF     INTCON, RBIF
     CLRF    BTN_FLAGS
+    CLRF    GAME_Tick1ms
     MOVF    PORTB, W      
                           ; mismatch condition before enabling RBIE
     MOVLW   B'10111000'   
     MOVWF   INTCON
     RETURN
 
-ISR
-    MOVWF   W_TEMP
-    SWAPF   STATUS, W
-    MOVWF   STATUS_TEMP
-    BCF     STATUS, RP0   ; force bank 0 for everything below -
-    BCF     STATUS, RP1   ; original bank is restored at the end
-
+ISR_Dispatch
     BTFSS   INTCON, T0IF
     GOTO    _ISR_CheckMaster
+    PAGESEL SEG_Refresh
     CALL    SEG_Refresh
-    BSF     GAME_Tick1ms, 0
+    PAGESEL _ISR_AfterRefresh
+_ISR_AfterRefresh
+    MOVF    GAME_Tick1ms, W
+    XORLW   0xFF
+    BTFSC   STATUS, Z
+    GOTO    _ISR_TickSaturated
+    INCF    GAME_Tick1ms, F
+_ISR_TickSaturated
     BCF     INTCON, T0IF
 
 _ISR_CheckMaster
@@ -57,14 +54,16 @@ _ISR_CheckMaster
 _ISR_CheckPlayers
     BTFSS   INTCON, RBIF
     GOTO    _ISR_Done
+    MOVF    PORTB, W       ; read first to clear the port-change mismatch
+    BCF     INTCON, RBIF
     BTFSS   PORTB, BTN_P1  ; active-low: 0 = pressed
     BSF     BTN_FLAGS, 1
     BTFSS   PORTB, BTN_P2
     BSF     BTN_FLAGS, 2
-    MOVF    PORTB, W       ; required read: clears the mismatch
-    BCF     INTCON, RBIF   ; condition before re-enabling
 
 _ISR_Done
+    MOVF    PCLATH_TEMP, W
+    MOVWF   PCLATH
     SWAPF   STATUS_TEMP, W
     MOVWF   STATUS
     SWAPF   W_TEMP, F

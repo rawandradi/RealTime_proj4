@@ -1,8 +1,8 @@
 
-; ---- LCD, 4-bit mode, all 6 lines on PORTA -------------------
-; (init.asm: TRISA = 0x00, all output)
-LCD_RS      EQU  5     ; RA5 - register select
-LCD_EN      EQU  4     ; RA4 - enable strobe
+; ---- LCD, 4-bit mode ------------------------------------------
+; Data: RA0-RA3; control: RE0-RE1; LCD RW is tied to GND.
+LCD_RS      EQU  0     ; RE0 - register select
+LCD_EN      EQU  1     ; RE1 - enable strobe
 LCD_D4      EQU  0     ; RA0 - data nibble bit0
 LCD_D5      EQU  1     ; RA1 - data nibble bit1
 LCD_D6      EQU  2     ; RA2 - data nibble bit2

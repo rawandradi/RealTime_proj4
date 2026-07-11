@@ -9,23 +9,9 @@
 ; the interrupt fired" - it does not guarantee that's a real,
 ; settled press. This file owns the settling/debounce decision.
 ;
-; Depends on : hardware_pins.inc, timer_isr.asm (BTN_FLAGS,
+; Depends on : hardware_pins.inc, ram_map.inc, timer_isr.asm (BTN_FLAGS,
 ;              GAME_Tick1ms)
 ;==============================================================
-
-    CBLOCK 0x60
-    BTN_M_Count       ; master button debounce counter
-    BTN_M_Held         ; 1 = currently considered pressed & settled
-    BTN_M_Event         ; 1 = fresh logical press this poll (consumed by game_fsm)
-
-    BTN_P1_Count
-    BTN_P1_Held
-    BTN_P1_Event
-
-    BTN_P2_Count
-    BTN_P2_Held
-    BTN_P2_Event
-    ENDC
 
 DEBOUNCE_MS   EQU  D'20'     ; ms of continuous "pressed" reads before we trust it
 

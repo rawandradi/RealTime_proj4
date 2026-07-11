@@ -3,25 +3,9 @@
 ; Drives two 4-digit 7-segment displays (Player 1 / Player 2)
 ; sharing one segment bus (PORTD) via time-multiplexing across
 ; all 8 digit-select lines (PORTC).
-; Registers used : 0x46-0x52 (Partner 2 RAM range: 0x40-0x5F)
+; RAM variables  : defined in include/ram_map.inc
 ; Depends on     : hardware_pins.inc, driver_macros.inc
 ;==============================================================
-
-P1_Digit0    EQU  0x46   ; Player 1 tens-of-seconds    (segment pattern, ready to output)
-P1_Digit1    EQU  0x47   ; Player 1 units-of-seconds   (dp forced on)
-P1_Digit2    EQU  0x48   ; Player 1 tens-of-hundredths
-P1_Digit3    EQU  0x49   ; Player 1 units-of-hundredths
-
-P2_Digit0    EQU  0x4A   ; Player 2 tens-of-seconds
-P2_Digit1    EQU  0x4B   ; Player 2 units-of-seconds
-P2_Digit2    EQU  0x4C   ; Player 2 tens-of-hundredths
-P2_Digit3    EQU  0x4D   ; Player 2 units-of-hundredths
-
-SEG_Index    EQU  0x4E   ; which of the 8 digits is lit right now (0-7)
-SEG_Temp     EQU  0x4F   ; scratch / units digit result from _SEG_BinToBCD
-SEG_Tens     EQU  0x52   ; tens digit result from _SEG_BinToBCD
-PARAM_SEC    EQU  0x50   ; input: 0-99, set by caller before SEG_SetPlayerX
-PARAM_HUN    EQU  0x51   ; input: 0-99, set by caller before SEG_SetPlayerX
 
 ; SEG_Init : clears digit buffers, deselects all digits
 SEG_Init
@@ -52,17 +36,65 @@ _SEG_BCD_Loop
     RETURN
 
 _SEG_DigitToPattern
-    ADDWF   PCL, F
-    RETLW   0x3F    ; 0
-    RETLW   0x06    ; 1
-    RETLW   0x5B    ; 2
-    RETLW   0x4F    ; 3
-    RETLW   0x66    ; 4
-    RETLW   0x6D    ; 5
-    RETLW   0x7D    ; 6
-    RETLW   0x07    ; 7
-    RETLW   0x7F    ; 8
-    RETLW   0x6F    ; 9
+    MOVWF   SEG_Tens
+    MOVF    SEG_Tens, W
+    XORLW   D'0'
+    BTFSC   STATUS, Z
+    GOTO    _SEG_Pattern0
+    MOVF    SEG_Tens, W
+    XORLW   D'1'
+    BTFSC   STATUS, Z
+    GOTO    _SEG_Pattern1
+    MOVF    SEG_Tens, W
+    XORLW   D'2'
+    BTFSC   STATUS, Z
+    GOTO    _SEG_Pattern2
+    MOVF    SEG_Tens, W
+    XORLW   D'3'
+    BTFSC   STATUS, Z
+    GOTO    _SEG_Pattern3
+    MOVF    SEG_Tens, W
+    XORLW   D'4'
+    BTFSC   STATUS, Z
+    GOTO    _SEG_Pattern4
+    MOVF    SEG_Tens, W
+    XORLW   D'5'
+    BTFSC   STATUS, Z
+    GOTO    _SEG_Pattern5
+    MOVF    SEG_Tens, W
+    XORLW   D'6'
+    BTFSC   STATUS, Z
+    GOTO    _SEG_Pattern6
+    MOVF    SEG_Tens, W
+    XORLW   D'7'
+    BTFSC   STATUS, Z
+    GOTO    _SEG_Pattern7
+    MOVF    SEG_Tens, W
+    XORLW   D'8'
+    BTFSC   STATUS, Z
+    GOTO    _SEG_Pattern8
+    GOTO    _SEG_Pattern9
+
+_SEG_Pattern0
+    RETLW   0x3F
+_SEG_Pattern1
+    RETLW   0x06
+_SEG_Pattern2
+    RETLW   0x5B
+_SEG_Pattern3
+    RETLW   0x4F
+_SEG_Pattern4
+    RETLW   0x66
+_SEG_Pattern5
+    RETLW   0x6D
+_SEG_Pattern6
+    RETLW   0x7D
+_SEG_Pattern7
+    RETLW   0x07
+_SEG_Pattern8
+    RETLW   0x7F
+_SEG_Pattern9
+    RETLW   0x6F
 
 
 ;----------------------------------------------------------------
@@ -113,13 +145,32 @@ SEG_Refresh
     MOVWF   PORTC          ; blank all digits first 
 
     MOVF    SEG_Index, W
-    ADDWF   PCL, F
+    XORLW   D'0'
+    BTFSC   STATUS, Z
     GOTO    _SEG_Show0
+    MOVF    SEG_Index, W
+    XORLW   D'1'
+    BTFSC   STATUS, Z
     GOTO    _SEG_Show1
+    MOVF    SEG_Index, W
+    XORLW   D'2'
+    BTFSC   STATUS, Z
     GOTO    _SEG_Show2
+    MOVF    SEG_Index, W
+    XORLW   D'3'
+    BTFSC   STATUS, Z
     GOTO    _SEG_Show3
+    MOVF    SEG_Index, W
+    XORLW   D'4'
+    BTFSC   STATUS, Z
     GOTO    _SEG_Show4
+    MOVF    SEG_Index, W
+    XORLW   D'5'
+    BTFSC   STATUS, Z
     GOTO    _SEG_Show5
+    MOVF    SEG_Index, W
+    XORLW   D'6'
+    BTFSC   STATUS, Z
     GOTO    _SEG_Show6
     GOTO    _SEG_Show7
 

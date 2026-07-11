@@ -8,12 +8,8 @@
 ; is validated - this is gameplay randomness, not cryptographic,
 ; so a simple LFSR plus a live hardware timer as entropy is
 ; sufficient and standard for this kind of round-based game.
+; RAM variables are defined in include/ram_map.inc.
 ;==============================================================
-
-    CBLOCK 0x62
-    RNG_Seed
-    RNG_Result
-    ENDC
 
 RNG_TAPS   EQU  0xB4   ; feedback polynomial for an 8-bit maximal LFSR
 
@@ -35,6 +31,10 @@ RNG_Reseed
     BANKSEL TMR0
     MOVF    TMR0, W
     XORWF   RNG_Seed, F
+    BTFSS   STATUS, Z
+    RETURN
+    MOVLW   0xA5
+    MOVWF   RNG_Seed
     RETURN
 
 ;--------------------------------------------------------------
@@ -44,6 +44,7 @@ RNG_Reseed
 ; Returns judge time (0-60) in W and in RNG_Result.
 ;--------------------------------------------------------------
 RNG_GetNext
+    BCF     STATUS, C
     RRF     RNG_Seed, W
     BTFSS   STATUS, C
     GOTO    _RNG_NoXor
@@ -55,6 +56,9 @@ _RNG_Range
     MOVLW   D'61'
     SUBWF   RNG_Result, W
     BTFSS   STATUS, C           ; C=0 -> result < 61, we're done
-    RETURN
+    GOTO    _RNG_Done
     MOVWF   RNG_Result
     GOTO    _RNG_Range
+_RNG_Done
+    MOVF    RNG_Result, W
+    RETURN

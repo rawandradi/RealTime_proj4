@@ -1,25 +1,22 @@
 
-LCD_Nibble   EQU  0x42
-PARAM_ROW    EQU  0x43
-PARAM_COL    EQU  0x44
-LCD_Temp     EQU  0x45
+; RAM variables are defined in include/ram_map.inc.
 
 _LCD_Out4
     MOVWF   LCD_Nibble      ; nibble already aligned to RA0-RA3, no shift needed
     MOVF    PORTA, W
-    ANDLW   B'00110000'     ; keep only current RS(bit5) and EN(bit4)
+    ANDLW   B'11110000'     ; preserve upper PORTA latch bits; replace RA0-RA3
     IORWF   LCD_Nibble, W
     MOVWF   PORTA
 
-    BSF     PORTA, LCD_EN
+    BSF     PORTE, LCD_EN
     DELAY_US D'1'
-    BCF     PORTA, LCD_EN
+    BCF     PORTE, LCD_EN
     DELAY_US D'1'
     RETURN
 
 LCD_Cmd
     MOVWF   LCD_Temp
-    BCF     PORTA, LCD_RS
+    BCF     PORTE, LCD_RS
     SWAPF   LCD_Temp, W
     ANDLW   0x0F
     CALL    _LCD_Out4
@@ -31,7 +28,7 @@ LCD_Cmd
 
 LCD_Char
     MOVWF   LCD_Temp
-    BSF     PORTA, LCD_RS
+    BSF     PORTE, LCD_RS
     SWAPF   LCD_Temp, W
     ANDLW   0x0F
     CALL    _LCD_Out4
@@ -65,7 +62,7 @@ _LCD_SC_Row0
 LCD_Init
     DELAY_MS D'20'
 
-    BCF     PORTA, LCD_RS
+    BCF     PORTE, LCD_RS
     MOVLW   0x03
     CALL    _LCD_Out4
     DELAY_MS D'5'
